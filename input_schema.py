@@ -12,3 +12,4 @@ INPUT_SCHEMA = {
         'example': ["Remember - this is only the first iteration of the model! To improve the prosody and naturalness of the speech further, we're scaling up the amount of training data by a factor of five times."]
     }
 }
+IS_STREAMING_OUTPUT = True
