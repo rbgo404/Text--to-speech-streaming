@@ -168,11 +168,11 @@ class InferlessPythonModel:
 
         input_value = inputs["input_value"]
         prompt_value = inputs["prompt_value"]
-        inputs = self.streamer.tokenizer(input_value, return_tensors="pt").to(self.streamer.device)
+        inputs_ = self.streamer.tokenizer(input_value, return_tensors="pt").to(self.streamer.device)
         prompt = self.streamer.tokenizer(prompt_value, return_tensors="pt").to(self.streamer.device)
 
         generation_kwargs = dict(
-            input_ids=inputs.input_ids,
+            input_ids=inputs_.input_ids,
             prompt_input_ids=prompt.input_ids,
             streamer=self.streamer,
             do_sample=True,
