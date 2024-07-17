@@ -1,6 +1,6 @@
 version: 1.0.0
 
-name: Text-To-Speech-Streaming
+name: Parler-TTS-Streaming
 import_source: GIT
 
 # you can choose the options between ONNX, TENSORFLOW, PYTORCH
@@ -36,6 +36,6 @@ optional:
   input_file_name: input.json
   output_file_name: output.json
   runtime_file_name: inferless-runtime-config.yaml
-model_url: https://github.com/rbgo404/Text--to-speech-streaming.git
+model_url: https://github.com/inferless/Parler-tts-streaming.git
 provider: GITHUB
 io_schema: true
