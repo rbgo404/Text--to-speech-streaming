@@ -1,11 +1,11 @@
 INPUT_SCHEMA = {
-    "input_value": {
+    "prompt_value": {
         'datatype': 'STRING',
         'required': True,
         'shape': [1],
         'example': ["A male speaker with a low-pitched voice delivering his words at a fast pace in a small, confined space with a very clear audio and an animated tone."]
     },
-    "prompt_value": {
+    "input_value": {
         'datatype': 'STRING',
         'required': True,
         'shape': [1],
