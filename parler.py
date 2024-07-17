@@ -9,32 +9,28 @@ from transformers.generation.streamers import BaseStreamer
 
 class ParlerTTSStreamer(BaseStreamer):
     def __init__(self):
-        device = "cuda:0" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
-        torch_dtype = torch.float16 if device != "cpu" else torch.float32
-
+        self.device = "cuda:0"
+        torch_dtype = torch.float16
+       
         repo_id = "parler-tts/parler_tts_mini_v0.1"
         self.tokenizer = AutoTokenizer.from_pretrained(repo_id)
         self.feature_extractor = AutoFeatureExtractor.from_pretrained(repo_id)
 
         self.SAMPLE_RATE = self.feature_extractor.sampling_rate
 
-        self.model = ParlerTTSForConditionalGeneration.from_pretrained(repo_id, torch_dtype=torch_dtype, low_cpu_mem_usage=True).to(device)
+        self.model = ParlerTTSForConditionalGeneration.from_pretrained(repo_id, torch_dtype=torch_dtype, low_cpu_mem_usage=True).to(self.device)
         self.decoder = self.model.decoder
         self.audio_encoder = self.model.audio_encoder
         self.generation_config = self.model.generation_config
-        self.device = device if device is not None else self.model.device
 
         self.sampling_rate = self.model.audio_encoder.config.sampling_rate
         frame_rate = self.model.audio_encoder.config.frame_rate
-
 
         play_steps_in_s=2.0
         play_steps = int(frame_rate * play_steps_in_s)
 
         # variables used in the streaming process
         self.play_steps = play_steps
-        # if stride is not None:
-        #     self.stride = stride
 
         hop_length = math.floor(self.audio_encoder.config.sampling_rate / self.audio_encoder.config.frame_rate)
         self.stride = hop_length * (play_steps - self.decoder.num_codebooks) // 6
@@ -45,6 +41,7 @@ class ParlerTTSStreamer(BaseStreamer):
         self.audio_queue = Queue()
         self.stop_signal = None
         self.timeout = None
+
     def apply_delay_pattern_mask(self, input_ids):
         # build the delay pattern mask for offsetting each codebook prediction by 1 (this behaviour is specific to Parler)
         _, delay_pattern_mask = self.decoder.build_delay_pattern_mask(
@@ -86,9 +83,7 @@ class ParlerTTSStreamer(BaseStreamer):
 
     def put(self, value):
         batch_size = value.shape[0] // self.decoder.num_codebooks
-        if batch_size > 1:
-            raise ValueError("ParlerTTSStreamer only supports batch size 1")
-
+     
         if self.token_cache is None:
             self.token_cache = value
         else:
@@ -100,7 +95,7 @@ class ParlerTTSStreamer(BaseStreamer):
             self.to_yield += len(audio_values) - self.to_yield - self.stride
 
     def end(self):
-        """Flushes any remaining cache and appends the stop symbol."""
+        # Flushes any remaining cache and appends the stop symbol
         if self.token_cache is not None:
             audio_values = self.apply_delay_pattern_mask(self.token_cache)
         else:
@@ -109,7 +104,7 @@ class ParlerTTSStreamer(BaseStreamer):
         self.on_finalized_audio(audio_values[self.to_yield :], stream_end=True)
 
     def on_finalized_audio(self, audio: np.ndarray, stream_end: bool = False):
-        """Put the new audio in the queue. If the stream is ending, also put a stop signal in the queue."""
+        # Put the new audio in the queue. If the stream is ending, also put a stop signal in the queue.
         self.audio_queue.put(audio, timeout=self.timeout)
         if stream_end:
             self.audio_queue.put(self.stop_signal, timeout=self.timeout)
