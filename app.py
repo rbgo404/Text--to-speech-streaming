@@ -1,5 +1,6 @@
 import io
 import base64
+import numpy as np
 from threading import Thread
 from pydub import AudioSegment
 from parler import ParlerTTSStreamer
